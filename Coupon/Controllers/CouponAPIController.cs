@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Service.Shop.Coupons.Database;
 using Service.Shop.Coupons.DTO;
 using Service.Shop.Coupons.Model;
+using System.Linq;
 
 namespace Service.Shop.Coupons.Controllers
 {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using MongoDB.Driver;
 using Shop.Services.AppUser.Model;
 using Shop.Services.AuthAPI.Database;
 using Shop.Services.AuthAPI.DTO;
@@ -12,10 +11,13 @@ namespace Shop.Services.AuthAPI.Service.IService
         private readonly DatabaseContext _db;
         private readonly UserManager<AppUserModel> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IJwtokenGenerator _jwtokenGenerator;
 
-        public AuthService(DatabaseContext db, UserManager<AppUserModel> userManager, RoleManager<IdentityRole> roleManager)
+
+        public AuthService(DatabaseContext db, UserManager<AppUserModel> userManager, RoleManager<IdentityRole> roleManager,IJwtokenGenerator jwtokenGenerator)
         {
             _db = db;
+            _jwtokenGenerator = jwtokenGenerator;
             _userManager = userManager;
             _roleManager = roleManager;
         }
@@ -29,8 +31,10 @@ namespace Shop.Services.AuthAPI.Service.IService
                 return new LoginResponseDTO() { User = null, Token = "" };
 
             }
+
             //Generate Token if user is found
-#pragma warning disable CS8601 // Possible null reference assignment.
+            var token = _jwtokenGenerator.GenerateToken(user);
+
             UserDTO userDTO = new()
             {
                 Email = user.Email,
@@ -38,7 +42,6 @@ namespace Shop.Services.AuthAPI.Service.IService
                 Name = user.Name,
                 Phone = user.PhoneNumber
             };
-#pragma warning restore CS8601 // Possible null reference assignment.
             LoginResponseDTO loginRequestDTO = new()
             {
                 User = userDTO,

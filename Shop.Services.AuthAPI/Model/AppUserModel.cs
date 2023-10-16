@@ -5,6 +5,6 @@ namespace Shop.Services.AppUser.Model
 {
     public class AppUserModel: IdentityUser
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }
