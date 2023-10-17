@@ -44,5 +44,19 @@ namespace Shop.Services.AuthAPI.Controllers
             _response.Result = logingRequest;
             return Ok(_response);
         }
+        [HttpPost("AssignRole")]
+        public async Task<IActionResult> AssignRole([FromBody] RegisterRequestDTO model)
+        {
+            var assignRole = await _authService.AssignRole(model.Email.ToUpper(),model.Role);
+            if (!assignRole)
+            {
+                _response.IsSuccessful = false;
+                _response.Message = "Error Assigning role ";
+                return BadRequest(_response);
+
+            }
+            _response.Result = assignRole;
+            return Ok(_response);
+        }
     }
 }

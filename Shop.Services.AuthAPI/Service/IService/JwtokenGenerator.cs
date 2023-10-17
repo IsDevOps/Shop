@@ -12,11 +12,11 @@ namespace Shop.Services.AuthAPI.Service.IService
     {
         private readonly JwtOptions _jwtOptions;
 
-        public JwtokenGenerator(IOptions<JwtOptions> jwtOptions)
+        public JwtokenGenerator(IOptions<JwtOptions> jwtOptions )
         {
             _jwtOptions = jwtOptions.Value;
         }
-        public string GenerateToken(AppUserModel appUserModel)
+        public string GenerateToken(AppUserModel appUserModel, IEnumerable<string> role)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
@@ -26,6 +26,8 @@ namespace Shop.Services.AuthAPI.Service.IService
                 new Claim(JwtRegisteredClaimNames.Sub, appUserModel.Id),
                 new Claim(JwtRegisteredClaimNames.Name, appUserModel.UserName),
             };
+
+            listClaims.AddRange(role.Select(roles => new Claim(ClaimTypes.Role, roles)));
             //Security token descriptions
             var tokenDesciptor = new SecurityTokenDescriptor
             {

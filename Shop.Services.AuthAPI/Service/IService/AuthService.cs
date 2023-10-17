@@ -14,12 +14,29 @@ namespace Shop.Services.AuthAPI.Service.IService
         private readonly IJwtokenGenerator _jwtokenGenerator;
 
 
-        public AuthService(DatabaseContext db, UserManager<AppUserModel> userManager, RoleManager<IdentityRole> roleManager,IJwtokenGenerator jwtokenGenerator)
+        public AuthService(DatabaseContext db, UserManager<AppUserModel> userManager, RoleManager<IdentityRole> roleManager, IJwtokenGenerator jwtokenGenerator)
         {
             _db = db;
             _jwtokenGenerator = jwtokenGenerator;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+
+        //Check if if the role exist
+        public async Task<bool> AssignRole(string email, string roleName)
+        {
+            var roleUser = _db.AppUserModel.FirstOrDefault(u => u.Email.ToLower() == email.ToLower());
+            if (roleUser != null)
+            {
+                if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
+                {
+                    //Create the role if the role does not exist
+                    _roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
+                }
+                await _userManager.AddToRoleAsync(roleUser, roleName);
+                return true;
+            }
+            return false;
         }
 
         public async Task<LoginResponseDTO> Login(LoginRequestDTO requestDTOs)
@@ -33,7 +50,8 @@ namespace Shop.Services.AuthAPI.Service.IService
             }
 
             //Generate Token if user is found
-            var token = _jwtokenGenerator.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _jwtokenGenerator.GenerateToken(user, roles);
 
             UserDTO userDTO = new()
             {
@@ -45,13 +63,13 @@ namespace Shop.Services.AuthAPI.Service.IService
             LoginResponseDTO loginRequestDTO = new()
             {
                 User = userDTO,
-                Token = "",
+                Token = token
 
             };
             return loginRequestDTO;
         }
 
-        
+
         public async Task<string> Register(RegisterRequestDTO registerRequestDTO)
         {
             AppUserModel user = new()
@@ -66,9 +84,9 @@ namespace Shop.Services.AuthAPI.Service.IService
             try
             {
                 var result = await _userManager.CreateAsync(user, registerRequestDTO.Password);
-                if(result.Succeeded)
+                if (result.Succeeded)
                 {
-                    var userToReturn = _db.AppUserModel.First(u=>u.UserName == registerRequestDTO.Email);
+                    var userToReturn = _db.AppUserModel.First(u => u.UserName == registerRequestDTO.Email);
 
                     UserDTO userDtos = new()
                     {
@@ -84,7 +102,8 @@ namespace Shop.Services.AuthAPI.Service.IService
                 {
                     return result.Errors.FirstOrDefault().Description;
                 }
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return "Error Encounted";
             }

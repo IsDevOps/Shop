@@ -4,7 +4,7 @@ namespace Shop.Services.AuthAPI.Service.IService
 {
     public interface IJwtokenGenerator
     {
-        string GenerateToken(AppUserModel appUserModel);
+        string GenerateToken(AppUserModel appUserModel, IEnumerable<string> role);
 
     }
 }
